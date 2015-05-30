@@ -6,7 +6,7 @@ import logging
 class SerfHandler(object):
     def __init__(self):
         self.name = os.environ['SERF_SELF_NAME']
-        self.role = os.environ.get('SERF_TAG_ROLE') or os.environ.get('SERF_SELF_ROLE')
+        self.roles = (os.environ.get('SERF_TAG_ROLE') or os.environ.get('SERF_SELF_ROLE')).split(":")
         self.logger = logging.getLogger(type(self).__name__)
         if os.environ['SERF_EVENT'] == 'user':
             self.event = os.environ['SERF_USER_EVENT']
@@ -29,19 +29,22 @@ class SerfHandlerProxy(SerfHandler):
         self.handlers[role] = handler
 
     def get_klass(self):
-        klass = False
-        if self.role in self.handlers:
-            klass = self.handlers[self.role]
-        elif 'default' in self.handlers:
-            klass = self.handlers['default']
+        klass = []
+        for role in self.roles:
+            if role in self.handlers:
+                klass.append(self.handlers[role])
+        if len(klass) == 0:
+            if 'default' in self.handlers:
+                klass = [self.handlers['default']]
         return klass
 
     def run(self):
         klass = self.get_klass()
-        if not klass:
+        if len(klass) == 0:
             self.log("no handler for role")
         else:
-            try:
-                getattr(klass, self.event)()
-            except AttributeError:
-                self.log("event not implemented by class")
+            for k in klass:
+                try:
+                    getattr(k, self.event)()
+                except AttributeError:
+                    self.log("event not implemented by class")
