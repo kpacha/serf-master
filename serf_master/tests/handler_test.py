@@ -25,7 +25,7 @@ class TestSerfHandler:
         assert self.handler.name == 'local'
 
     def test_role_set_from_env(self):
-        assert self.handler.role == 'web'
+        assert self.handler.roles == ['web']
 
     def test_event_set_from_env(self):
         assert self.handler.event == 'member_join'
@@ -48,7 +48,7 @@ class TestSerfHandlerTags:
     def setup(self):
         os.environ = {
             'SERF_SELF_NAME': 'null',
-            'SERF_TAG_ROLE': 'bob',
+            'SERF_TAG_ROLE': 'bob:tom',
             'SERF_EVENT': 'null',
         }
         self.handler = SerfHandlerProxy()
@@ -56,7 +56,7 @@ class TestSerfHandlerTags:
         assert len(self.handler.handlers) == 0
 
     def test_role_set_from_env(self):
-        assert self.handler.role == 'bob'
+        assert self.handler.roles == ['bob', 'tom']
 
 
 class TestSerfHandlerRoleOverloading:
@@ -73,7 +73,7 @@ class TestSerfHandlerRoleOverloading:
         assert len(self.handler.handlers) == 0
 
     def test_role_set_from_env(self):
-        assert self.handler.role == 'bob'
+        assert self.handler.roles == ['bob']
 
 
 class TestSerfHandlerNegativeCases:
